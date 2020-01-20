@@ -54,8 +54,7 @@ luci.ip.neighbors({ family = 6 }, function(entry)
                o:value(entry.dest:string())
        end
 end)
-o.description = translate("Bind Address")
-o:depends("allow_lan", "true")
+o.description = translate("Bind Address"):depends("allow_lan", "true")
 
 
 o = s:option(Value, "dash_port")

@@ -8,12 +8,12 @@
 	A rule based custom proxy for Openwrt based on <a href="https://github.com/Dreamacro/clash" target="_blank">Clash</a>.
   </p>
   <p align="center">
-  <a target="_blank" href="https://github.com/frainzy1477/luci-app-clash/releases/tag/v1.4.6">
-    <img src="https://img.shields.io/badge/luci%20for%20clash-v1.4.6-blue.svg"> 	  
+  <a target="_blank" href="https://github.com/frainzy1477/luci-app-clash/releases/tag/v1.4.8">
+    <img src="https://img.shields.io/badge/luci%20for%20clash-v1.4.8-blue.svg"> 	  
   </a>
-   <a href="https://github.com/frainzy1477/luci-app-clash/releases" target="_blank">
+  <!-- <a href="https://github.com/frainzy1477/luci-app-clash/releases" target="_blank">
         <img src="https://img.shields.io/github/downloads/frainzy1477/luci-app-clash/total.svg?style=flat-square"/>
-    </a>
+    </a>-->
   
   </p>
 
@@ -30,15 +30,8 @@ removed:
 
 - cd /tmp
 
-- opkg install luci-app-clash_1.4.6_all.ipk  
-- opkg install luci-app-clash_1.4.6_all.ipk --force-depends
-
- ## Wiki
- 
-- [Fake-IP wiki](https://github.com/frainzy1477/luci-app-clash/wiki/Fake-IP-Mode)
-
-- [Redir-Host wiki](https://github.com/frainzy1477/luci-app-clash/wiki/Redir-Host-Mode)
-
+- opkg install luci-app-clash_1.4.8_all.ipk  
+- opkg install luci-app-clash_1.4.8_all.ipk --force-depends
 
 ## Features
 
@@ -53,7 +46,7 @@ removed:
 - Create v2ray & ssr clash config from subscription url
 - Create Custom Clash Config
 - Tun Support
-- Support Proxy Provider
+- Support Proxy Provider [Thanks to @vernesong ](https://github.com/vernesong/OpenClash)
 
 ## Dependency
 
@@ -83,5 +76,4 @@ removed:
 
 Luci For Clash - OpenWrt is released under the GPL v3.0 License - see detailed [LICENSE](https://github.com/frainzy1477/luci-app-clash/blob/master/LICENSE) .
 
-[Clash Dashboard](https://github.com/Dreamacro/clash-dashboard)
 
