@@ -55,7 +55,7 @@ jobs:
         CONFIG_FILE: '.config'
       run: |
         REP=$(basename "${REPF}")
-        mv "package/${REP}/${CONFIG_FILE}" .config || echo "# Not customed..."
+        [ -e "package/${REP}/${CONFIG_FILE}" ] && mv "${CONFIG}" .config
         make defconfig
 
     - name: Build target
