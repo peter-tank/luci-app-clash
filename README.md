@@ -17,6 +17,13 @@
   
   </p>
 
+removed:
+- root/etc/clash/Country.mmdb
+- root/usr/share/clash/dashboard
+- root/usr/share/clash/yac
+- root/usr/share/clash/web
+- preview
+-----
   
  ## Install
 - Upload ipk file to tmp folder

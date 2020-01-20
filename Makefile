@@ -89,6 +89,7 @@ exit 0
 endef
 
 define Package/$(PKG_NAME)/install
+	$(INSTALL_DIR) $(1)/usr/share/clash/dashboard
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/clash
@@ -100,9 +101,6 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
 	$(INSTALL_DIR) $(1)/usr/share/
 	$(INSTALL_DIR) $(1)/usr/share/clash
-	$(INSTALL_DIR) $(1)/usr/share/clash/dashboard
-	$(INSTALL_DIR) $(1)/usr/share/clash/dashboard/img
-	$(INSTALL_DIR) $(1)/usr/share/clash/dashboard/js
 	$(INSTALL_DIR) $(1)/etc/clash/clashtun
 	$(INSTALL_DIR) $(1)/usr/share/clashbackup
 	$(INSTALL_DIR) $(1)/etc/clash/provider
@@ -148,11 +146,6 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_BIN) ./root/usr/share/clash/logstatus_check $(1)/usr/share/clash/
 	$(INSTALL_BIN) ./root/usr/share/clash/clash.txt $(1)/tmp/
 
-	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/index.html $(1)/usr/share/clash/dashboard/
-	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/main.0bddb85299f970595cb5.css $(1)/usr/share/clash/dashboard/
-	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/img/33343e6117c37aaef8886179007ba6b5.png $(1)/usr/share/clash/dashboard/img/
-	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/js/1.bundle.0bddb85299f970595cb5.min.js $(1)/usr/share/clash/dashboard/js/
-	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/js/bundle.0bddb85299f970595cb5.min.js $(1)/usr/share/clash/dashboard/js/
         
 	$(INSTALL_DATA) ./luasrc/clash.lua $(1)/usr/lib/lua/luci/
 	$(INSTALL_DATA) ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller/
