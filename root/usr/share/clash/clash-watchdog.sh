@@ -1,35 +1,13 @@
-#!/bin/sh
-  
-sleeptime=300
-logfile="/tmp/clash.log"
-CLASH="/etc/clash/clash"
-CLASH_CONFIG="/etc/clash"
+#!/bin/sh 
+
 enable=$(uci get clash.config.enable 2>/dev/null)
-
-clean_log(){
-	logrow=$(grep -c "" ${logfile})
-	logrow1=$(grep -c "" ${logfile1})
-	if [ $logrow -ge 1000 ];then
-		cat /dev/null > ${logfile}
-		echo "$curtime Logs exceeded limit，cleaning logs now..！" >> ${logfile}
-	fi
-	
-
-}
-
-while [ $enable -eq 1 ];
-do
-	curtime=`date "+%H:%M:%S"`
-	if pidof clash>/dev/null; then
-		clean_log
-	fi
+if [ "${enable}" -eq 1 ];then
 	if ! pidof clash>/dev/null; then
 		/etc/init.d/clash restart 2>&1 &
-		echo "$curtime Clash Is Restarting！" >> ${logfile}
 	fi
+fi
 
-sleep ${sleeptime}
-continue
-done
+
+
 
 

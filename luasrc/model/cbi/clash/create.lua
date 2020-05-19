@@ -29,7 +29,7 @@ o.inputstyle = "reload"
 o.write = function()
   uci:commit("clash")
   luci.sys.call("bash /usr/share/clash/rule.sh >>/tmp/clash.txt >/dev/null 2>&1 &")
-  HTTP.redirect(DISP.build_url("admin", "services", "clash", "servers"))
+  HTTP.redirect(DISP.build_url("admin", "services", "clash", "create"))
 end
 
 local rule = "/usr/share/clash/custom_rule.yaml"
@@ -62,10 +62,14 @@ cc = s:option(Flag, "create", translate("Enable Create"))
 cc.default = 1
 cc.description = translate("Enable to create configuration")
 
-o = s:option(ListValue, "loadfrom", translate("Load From"))
-o:value("sub", translate("Subscription Config"))
-o:value("upl", translate("Upload Config"))
-o.description = translate("Select from which configuration custom server should be loaded from")
+o = s:option(Value, "create_tag")
+o.title = translate("Config Name")
+o.rmempty = true
+o.description = translate("Give a name for your config")
+
+cc = s:option(Flag, "same_tag", translate("Force Same Name"))
+cc.default = 1
+cc.description = translate("Enable to overwrite config file")
 
 o = s:option(ListValue, "loadservers", translate("Load Servers"))
 o:value("1", translate("enabled"))
@@ -78,9 +82,13 @@ o:value("1", translate("enabled"))
 o:value("0", translate("disabled"))
 o.description = translate("Enable to read policy group")
 
+o = s:option(ListValue, "loadprovider", translate("Load Provider"))
+o:value("1", translate("enabled"))
+o:value("0", translate("disabled"))
+o.description = translate("Enable to read Proxy Provider")
 
 local t = {
-    {Load_Config, Creat_Config, Delete_Severs, Delete_Groups}
+    {Load_Config, Creat_Config, Apply, Delete_Severs, Delete_Groups}
 }
 
 b = krk:section(Table, t)
@@ -103,6 +111,13 @@ o.write = function()
   luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash"))
 end
 
+o = b:option(Button,"Apply")
+o.inputtitle = translate("Save & Apply")
+o.inputstyle = "apply"
+o.write = function()
+  krk.uci:commit("clash")
+  luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "create"))
+end
 
 o = b:option(Button,"Delete_Severs")
 o.inputtitle = translate("Delete Severs")
@@ -139,7 +154,7 @@ s.anonymous = true
 s.addremove = true
 s.sortable = false
 s.template = "cbi/tblsection"
-s.extedit = luci.dispatcher.build_url("admin/services/clash/servers-config/%s")
+s.extedit = luci.dispatcher.build_url("admin/services/clash/servers/%s")
 function s.create(...)
 	local sid = TypedSection.create(...)
 	if sid then
@@ -181,7 +196,7 @@ s.anonymous = true
 s.addremove = true
 s.sortable = false
 s.template = "cbi/tblsection"
-s.extedit = luci.dispatcher.build_url("admin/services/clash/provider-config/%s")
+s.extedit = luci.dispatcher.build_url("admin/services/clash/provider/%s")
 function s.create(...)
 	local sid = TypedSection.create(...)
 	if sid then

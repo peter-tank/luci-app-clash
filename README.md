@@ -1,5 +1,5 @@
 <h2 align="center">
- <img src="https://github.com/Dreamacro/clash/raw/master/docs/logo.png" alt="Clash" width="200">
+ <img src="https://cdn.jsdelivr.net/gh/Dreamacro/clash/docs/logo.png" alt="Clash" width="200">
   <br>Luci For Clash <br>
 
 </h2>
@@ -8,45 +8,37 @@
 	A rule based custom proxy for Openwrt based on <a href="https://github.com/Dreamacro/clash" target="_blank">Clash</a>.
   </p>
   <p align="center">
-  <a target="_blank" href="https://github.com/frainzy1477/luci-app-clash/releases/tag/v1.4.8">
-    <img src="https://img.shields.io/badge/luci%20for%20clash-v1.4.8-blue.svg"> 	  
+  <a target="_blank" href="https://github.com/frainzy1477/luci-app-clash/releases/tag/v1.6.8">
+    <img src="https://img.shields.io/badge/luci%20for%20clash-v1.6.8-blue.svg"> 	  
   </a>
   <!-- <a href="https://github.com/frainzy1477/luci-app-clash/releases" target="_blank">
         <img src="https://img.shields.io/github/downloads/frainzy1477/luci-app-clash/total.svg?style=flat-square"/>
     </a>-->
-  
   </p>
 
-removed:
-- root/etc/clash/Country.mmdb
-- root/usr/share/clash/dashboard
-- root/usr/share/clash/yac
-- root/usr/share/clash/web
-- preview
------
   
  ## Install
 - Upload ipk file to tmp folder
 
 - cd /tmp
-
-- opkg install luci-app-clash_1.4.8_all.ipk  
-- opkg install luci-app-clash_1.4.8_all.ipk --force-depends
+- opkg update
+- opkg install luci-app-clash_1.6.8_all.ipk  
+- opkg install luci-app-clash_1.6.8_all.ipk --force-depends
 
 ## Features
 
-- Support Manually config upload (config.yaml / config.yml)
+- Support Manually config upload
 - GeoIP Database Update
 - Iptables udp redirect
 - IP Query / Website Access Check
-- Proxy Lan IP(Client IP) that go through Proxy
-- Bypass Lan IP(Client IP) that can't go through Proxy
 - DNS Forwarding
+- Support Trojan
+- Support SSR
 - Ping Custom proxy servers
 - Create v2ray & ssr clash config from subscription url
 - Create Custom Clash Config
 - Tun Support
-- Support Proxy Provider [Thanks to @vernesong ](https://github.com/vernesong/OpenClash)
+- Support Proxy Provider,Game rules & Restore Config [Thanks to @vernesong ](https://github.com/vernesong/OpenClash)
 
 ## Dependency
 
@@ -59,10 +51,12 @@ removed:
 - luci
 - luci-base
 - wget
-- kmod-tun
 - libustream-openssl 
 - libopenssl 
 - openssl-util
+- curl
+- jsonfilter
+- ca-certificates
 
 ## Clash on Other Platforms
 

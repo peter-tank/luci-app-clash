@@ -143,7 +143,7 @@ msgid "Overview"
 msgstr "概览"
 
 msgid "Download"
-msgstr "下载新版本"
+msgstr "下载"
 
 msgid "Checking..."
 msgstr "正在检查..."
@@ -265,14 +265,11 @@ msgstr "国外网IP"
 msgid "clash"
 msgstr "clash"
 
-msgid "OPEN DASHBOARD"
-msgstr "打开外部控制"
+msgid "DASHBOARD"
+msgstr "外部控制"
 
 msgid "Clash Dashboard"
-msgstr "Clash外部控制"
-
-msgid "Yac Dashboard"
-msgstr "Yacd外部控制"
+msgstr "Clash控制面板"
 
 msgid "Client"
 msgstr "客户端"
@@ -471,7 +468,7 @@ msgid "Custom"
 msgstr "自定义"
 
 msgid "Config Type"
-msgstr "配置类型"
+msgstr "Clash配置类型"
 
 msgid "Select Configuration type"
 msgstr "选择配置类型”"
@@ -612,7 +609,7 @@ msgid "Edit Proxy Provider"
 msgstr "编辑代理集配置"
 
 msgid "Provider Type"
-msgstr "代理集类型
+msgstr "代理集类型"
 
 msgid "Provider Type"
 msgstr "代理集的类型"
@@ -659,8 +656,8 @@ msgstr "选Tun模式"
 msgid "Tun Mode DNS"
 msgstr "Tun模式DNS"
 
-msgid "Select Tun Mode, Enable Tun custom DNS and make sure you are using tun supported core"
-msgstr "选择Tun模式，启用Tun自定义DNS,并确保使用支持的Tun内核"
+msgid "Enable Tun custom DNS and make sure you are using tun supported core"
+msgstr "启用Tun自定义DNS,并确保使用支持的Tun内核"
 
 msgid "Upload Provider File"
 msgstr "上传代理集文件"
@@ -766,3 +763,303 @@ msgstr "未选择文件"
 
 msgid "Chose File"
 msgstr "选择文件"
+
+msgid "Update Time"
+msgstr "更新时间"
+
+msgid "File Name"
+msgstr "文件名"
+
+msgid "Use Config"
+msgstr "使用配置"
+
+msgid "Size"
+msgstr "文件大小"
+
+msgid "Remove"
+msgstr "移除"
+
+msgid "Download Config"
+msgstr "下载配置"
+
+msgid "Config Name"
+msgstr "配置名"
+
+msgid "Config Name. Do not use a config name that already exist"
+msgstr "配置名,不要使用已经存在的配置名"
+
+msgid "CONFIG IN USE"
+msgstr "使用中的配置"
+
+msgid "Daily Server subscription update time. Only update config in use"
+msgstr "每日服务器订阅更新时间。仅更新正在使用的配置"
+
+msgid "NB: Only upload file with name .yaml.It recommended to rename each upload file name to avoid overwrite"
+msgstr "注意：仅上载名为.yaml的文件。建议重命名每个上载文件名以避免覆盖"
+
+msgid "Not Selected"
+msgstr "未选择"
+
+msgid "Force Same Name"
+msgstr "强制使用同名"
+
+msgid "Enable to overwrite config file"
+msgstr "启用覆盖配置文件"
+
+msgid "Give a name for your config"
+msgstr "为配置命名"
+
+msgid "Config Type"
+msgstr "Clash配置类型"
+
+msgid "SUBSCRIBE"
+msgstr "订阅配置"
+
+msgid "UPLOAD"
+msgstr "上传配置"
+
+msgid "CUSTOM"
+msgstr "自定义配置"
+
+msgid "Operation"
+msgstr "操作"
+
+msgid "NOT SELECTED"
+msgstr "未选择"
+
+msgid "Game Rule's Name"
+msgstr "选择游戏规则"
+
+msgid "Select Proxy Group"
+msgstr "选择策略组"
+
+msgid "Game Rules List"
+msgstr "游戏规则列表"
+
+msgid "Rule Name"
+msgstr "规则名称"
+
+msgid "Download Rule"
+msgstr "下载规则"
+
+msgid "Exist"
+msgstr "已下载"
+
+msgid "Not Exist"
+msgstr "未下载"
+
+msgid "Order Number"
+msgstr "序号"
+
+msgid "Game Rules & Groups"
+msgstr "游戏规则策略组"
+
+msgid "Timeout"
+msgstr "下载超时"
+
+msgid "Error"
+msgstr "下载失败"
+
+msgid "Successful"
+msgstr "下载成功"
+
+msgid "Game Rules"
+msgstr "游戏规则"
+
+msgid "Update Rule"
+msgstr "点击更新规则"
+
+msgid "Game Rule Tag"
+msgstr "游戏规则名字"
+
+msgid "Rule Tag"
+msgstr "游戏名字"
+
+msgid "Edit Game Rule & Group"
+msgstr "编辑游戏规则策略组"
+
+msgid "Give a special name for your rules"
+msgstr "规则名字"
+
+msgid "Select a policy group to add rule"
+msgstr "选择要添加规则的策略组"
+
+msgid "Set rules under Setting=>Game Rules, will take effect when client start"
+msgstr "在设置=>游戏规则下设置规则，将在客户端启动时生效"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Downloading..."
+msgstr "正在下载规则..."
+
+msgid "Auto Update Config"
+msgstr "自动更新配置"
+
+msgid "Subcription Config List"
+msgstr "订阅配置列表"
+
+msgid "Upload Config List"
+msgstr "上传配置列表"
+
+msgid "Custom Config List"
+msgstr "自定义配置列表"
+
+msgid "Downloading..."
+msgstr "正在下载规则..."
+
+msgid "Downloading..."
+msgstr "正在下载规则..."
+
+msgid "Clash Config"
+msgstr "Clash配置"
+
+msgid "VIEW CONFIG"
+msgstr "查看配置"
+
+msgid "If config does not show refresh page"
+msgstr "如果配置不显示刷新页"
+
+msgid "Usage Steps:"
+msgstr "使用步骤："
+
+msgid "1.Load Policy Group, make sure you have selected a config on config page"
+msgstr "1. 加载策略组，确保已在配置页上选择配置。"
+
+msgid "2.Download the game rules you want to use from the game rules list on this page"
+msgstr "2. 从该页的游戏规则列表中下载要使用的游戏规则。"
+
+msgid "3. Make sure your game and servers support UDP"
+msgstr "3. 确保游戏和服务器支持UDP。"
+
+msgid "4.Click on ADD, Set the corresponding policy group of the downloaded game rules and save, recommended: FallBack"
+msgstr "4. 单击添加，设置下载游戏规则的相应策略组（策略组类型建议:FallBack）。"
+
+msgid "5.Select ClashTun Core type and start client"
+msgstr "5. 在客户端页选择ClashTun内核(https://github.com/comzyh/clash/releases)和启用游戏规则。"
+
+msgid "RULE"
+msgstr "规则模式"
+
+msgid "GLOBAL"
+msgstr "全局模式"
+
+msgid "DIRECT"
+msgstr "直接模式"
+
+msgid "Proxy Mode"
+msgstr "代理模式"
+
+msgid "Choose proxy mode"
+msgstr "选择代理模式"
+
+msgid "NB: Upload only Dreamacro clash tun core - (https://github.com/Dreamacro/clash/releases/tag/TUN)"
+msgstr "注意：只上传clash tun内核-(https://github.com/Dreamacro/clash/releases/tag/TUN)"
+
+msgid "Load Provider"
+msgstr "读取代理集"
+
+msgid "Enable to read Proxy Provider"
+msgstr "启用读取代理集"
+
+msgid "Every Hour"
+msgstr "每个小时"
+
+msgid "Every 6 Hours"
+msgstr "每个6小时"
+
+msgid "Every 12 Hours"
+msgstr "每个12小时"
+
+msgid "Every 24 Hours"
+msgstr "每个24小时"
+
+msgid "Clear Clash Log"
+msgstr "清除日志"
+
+msgid "Auto Clear Log"
+msgstr "自动清除日志"
+
+msgid "Clear Time (Time of Day)"
+msgstr "清除时间（一天中的时间）"
+
+msgid "Clear Log Time"
+msgstr "清除日志时间"
+
+msgid "Other Settings"
+msgstr "其他设置"
+
+msgid "Rule Type"
+msgstr "规则类型"
+
+msgid "Choose Type"
+msgstr "选择类型"
+
+msgid "Set custom rules under Setting=>Others , will take effect when client start"
+msgstr "在“设置”=>“其他”下设置自定义规则，将在客户端启动时生效"
+
+msgid "Append Customs Rules"
+msgstr "附加自定义规则"
+
+msgid "Edit Custom Rule & Group"
+msgstr "编辑自定义规则组"
+
+msgid "Custom Rules"
+msgstr "自定义规则"
+
+msgid "IP/Domain/Address/Keyword/Port"
+msgstr "IP/域/地址/关键字/端口"
+
+msgid "Manually download, unzip and rename clash core from links below and upload"
+msgstr "从下面的链接手动下载、解压和重命名到clash然后上载"
+
+msgid "Manual Upload"
+msgstr "手动上载"
+
+msgid "Download Online"
+msgstr "在线下载"
+
+msgid "Yacd Dashboard"
+msgstr "Yacd控制面板"
+
+msgid "Enable Ping Servers"
+msgstr "启用Ping服务器"
+
+msgid "New Config(Rename fields)"
+msgstr "新配置(重命名字段)"
+
+msgid "Enable UDP"
+msgstr "启用UDP"
+
+msgid "Enable udp traffic ,make sure your server support udp"
+msgstr "启用udp流量，服务器必须支持udp"
+
+msgid "DNS Cache"
+msgstr "DNS缓存"
+
+msgid "Set to enable or disable dns cache"
+msgstr "设置为启用或禁用dns缓存"
+
+msgid "Old Config"
+msgstr "旧配置"
+
+msgid "Import config info"
+msgstr "导入配置信息"
+
+msgid "Import V2ray config info successful"
+msgstr "导入V2ray配置信息成功"
+
+msgid "Import Trojan config info successful"
+msgstr "导入Trojan配置信息成功"
+
+msgid "Import Shadowsocks config info successful"
+msgstr "导入Shadowsocks配置信息成功"
+
+msgid "Import ShadowsocksR config info successful"
+msgstr "导入ShadowsocksR配置信息成功"
+
+msgid "Invalid link"
+msgstr "无效格式"
+
+msgid "Operation Aborted"
+msgstr "用户取消"

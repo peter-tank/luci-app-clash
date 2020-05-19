@@ -1,19 +1,48 @@
 #!/bin/bash /etc/rc.common
 . /lib/functions.sh
 
-create_config(){
-
 REAL_LOG="/usr/share/clash/clash_real.txt"
 lang=$(uci get luci.main.lang 2>/dev/null)
 config_type=$(uci get clash.config.config_type 2>/dev/null)
 create=$(uci get clash.config.create 2>/dev/null)
-load_from=$(uci get clash.config.loadfrom 2>/dev/null) 
+load_from=$(uci get clash.config.loadfrom 2>/dev/null)
+config_name=$(uci get clash.config.create_tag 2>/dev/null)
+CONFIG_YAML="/usr/share/clash/config/custom/${config_name}.yaml" 
+check_name=$(grep -F "${config_name}.yaml" "/usr/share/clashbackup/create_list.conf") 
+same_tag=$(uci get clash.config.same_tag 2>/dev/null)
+
+if  [ $config_name == "" ] || [ -z $config_name ];then
+
+	if [ $lang == "en" ] || [ $lang == "auto" ];then
+				echo "Tag Your Config" >$REAL_LOG
+	elif [ $lang == "zh_cn" ];then
+				echo "标记您的配置" >$REAL_LOG
+	fi
+	sleep 5
+	echo "Clash for OpenWRT" >$REAL_LOG
+	exit 0	
+	
+fi
+
+if [ ! -z $check_name ] && [ "${same_tag}" -eq 0 ];then
+
+	if [ $lang == "en" ] || [ $lang == "auto" ];then
+				echo "Config with same name exist, please rename tag and create again" >$REAL_LOG
+	elif [ $lang == "zh_cn" ];then
+				echo "已存在同名配置，请重命名标记,重新创建配置" >$REAL_LOG
+	fi
+	sleep 5
+	echo "Clash for OpenWRT" >$REAL_LOG
+	exit 0	
+
+   
+else
 
 
-if [ "$load_from" == "sub" ];then  
-        load="/usr/share/clash/config/sub/config.yaml"	
+if [ "$load_from" == "sub" ];then 
+        load=$(uci get clash.config.config_path_sub 2>/dev/null)	
 elif [ "$load_from" == "upl" ];then
-	    load="/usr/share/clash/config/upload/config.yaml"
+	load=$(uci get clash.config.config_path_up 2>/dev/null)
 fi
 
 if [ "${create}" -eq 1 ];then
@@ -23,12 +52,9 @@ if [ "${create}" -eq 1 ];then
 	elif [ $lang == "zh_cn" ];then
     	 echo "开始创建自定义配置..." >$REAL_LOG
 	fi
-	sleep 1
-	
 	
 CONFIG_YAML_RULE="/usr/share/clash/custom_rule.yaml"
 SERVER_FILE="/tmp/servers.yaml"
-CONFIG_YAML="/usr/share/clash/config/custom/config.yaml"
 TEMP_FILE="/tmp/dns_temp.yaml"
 Proxy_Group="/tmp/Proxy_Group"
 GROUP_FILE="/tmp/groups.yaml"
@@ -52,8 +78,17 @@ PROVIDER_FILE="/tmp/yaml_provider.yaml"
 	fi
 	exit 0	
    fi
-	sleep 2
 
+
+set_http_path()
+{
+   if [ -z "$1" ]; then
+      return
+   fi
+cat >> "$SERVER_FILE" <<-EOF
+      - '$1'
+EOF
+}
 
 
 yml_proxy_provider_set()
@@ -120,11 +155,38 @@ fi
 
 if [ -f $PROVIDER_FILE ];then 
 sed -i "1i\   " $PROVIDER_FILE 2>/dev/null 
+
 sed -i "2i\proxy-provider:" $PROVIDER_FILE 2>/dev/null
+
 #echo "proxy-provider:" >$PROVIDER_FILE
 rm -rf /tmp/Proxy_Provider
 
 fi
+
+set_alpn()
+{
+   if [ -z "$1" ]; then
+      return
+   fi
+cat >> "$SERVER_FILE" <<-EOF
+    - $1
+EOF
+}
+
+
+set_groups()
+{
+  if [ -z "$1" ]; then
+     return
+  fi
+
+	if [ "$1" = "$3" ]; then
+	   set_group=1
+	   echo "  - \"${2}\"" >>$GROUP_FILE
+	fi
+
+}
+
 
 
 servers_set()
@@ -158,35 +220,15 @@ servers_set()
    config_get "cipher_ssr" "$section" "cipher_ssr" ""
    config_get "psk" "$section" "psk" ""
    config_get "obfs_snell" "$section" "obfs_snell" ""
-	
+   config_get "sni" "$section" "sni" ""
+   config_get "alpn" "$section" "alpn" ""
+   config_get "http_path" "$section" "http_path" ""
+   config_get "keep_alive" "$section" "keep_alive" ""
+   
    if [ -z "$type" ]; then
       return
    fi
-   
-	if [ ! -z "$protocolparam" ];then
-	  pro_param=", protocolparam: $protocolparam"	
-	else
-	  pro_param=", protocolparam: ''" 
-	fi
-
-	if [ ! -z "$protocol" ] && [ "$type" = "ssr" ];then
-	  protol=", protocol: $protocol"
-	else
-	  protol=", protocol: origin"	 
-	fi
-	
-	if [ ! -z "$obfs_ssr" ];then
-	 ssr_obfs=", obfs: $obfs_ssr"
-	else
-	 ssr_obfs=", obfs: plain"
-	fi
-	
-	if [ ! -z "$obfsparam" ];then
-	 obfs_param=", obfsparam: $obfsparam"
-         else
-	obfs_param=", obfsparam: ''"
-	fi 
-   
+    
    if [ -z "$server" ]; then
       return
    fi
@@ -206,7 +248,11 @@ servers_set()
       return
    fi
    
-   if [ ! -z "$udp" ] && [ "$obfs" ] || [ "$obfs" = " " ]; then
+   if [ ! -z "$udp" ] && [ "$obfs" = "none" ] && [ "$type" = "ss" ]; then
+      udpp=", udp: $udp"
+   fi
+
+   if [ ! -z "$udp" ] && [ "$type" != "trojan" ] && [ "$type" != "ss" ]; then
       udpp=", udp: $udp"
    fi
    
@@ -218,59 +264,36 @@ servers_set()
       fi
    fi
    
-   if [ "$obfs_vmess" = "none" ] && [ "$type" = "vmess" ]; then
-      	obfs_vmesss=""
-   elif [ "$obfs_vmess" != "none" ] && [ "$type" = "vmess" ]; then 
-      	obfs_vmesss=", network: ws"
-   fi  
+   if [ "$obfs_vmess" = "websocket" ]; then
+      obfs_vmess="network: ws"
+   fi
    
-
+   if [ "$obfs_vmess" = "http" ]; then
+      obfs_vmess="network: http"
+   fi
    
    if [ ! -z "$custom" ] && [ "$type" = "vmess" ]; then
-      custom=", ws-headers: { Host: $custom }"
+      custom="Host: $custom"
    fi
-   
-   if [ "$tls" = "false" ] && [ "$type" = "vmess" ]; then
-          tls=", tls: $tls"
-   elif [ "$tls" = "true" ] && [ "$type" = "vmess" ]; then
-          tls=", tls: $tls"
-   elif [ "$tls" = "false" ] && [ "$type" = "http" ];then
-	  tls=", tls: $tls"
-   elif [ "$tls" = "false" ] && [ "$type" = "socks5" ]; then
-	  tls=", tls: $tls"
-   elif [ "$tls" = "true" ] && [ "$type" = "http" ]; then
-	  tls=", tls: $tls" 
-   elif [ "$tls" = "true" ] && [ "$type" = "socks5" ]; then
-	  tls=", tls: $tls"
-   elif [ -z "$tls" ] && [ "$type" != "ss" ]; then
-	  tls=""	  
-   fi
-
    
    if [ ! -z "$path" ]; then
       if [ "$type" != "vmess" ]; then
-         paths="path: '$path'"
-      else
-         path=", ws-path: $path"
+         path="path: '$path'"
+      elif [ "$obfs_vmess" = "network: ws" ]; then
+         path="ws-path: $path"
       fi
    fi
 
-   if [ "$skip_cert_verify" = "true" ] && [ "$type" = "vmess" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "false" ] && [ "$type" = "vmess" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "true" ] && [ "$type" = "http" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "true" ] && [ "$type" = "socks5" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "false" ] && [ "$type" = "http" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "false" ] && [ "$type" = "socks5" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ -z "$skip_cert_verify" ]; then
-      skip_cert_verifys=""	  
+   if [ ! -z "$auth_name" ] && [ ! -z "$auth_pass" ]; then
+      auth_psk=", username: $auth_name, password: $auth_pass"
    fi
-
+   
+   
+   if [ -z "$password" ]; then
+   	 if [ "$type" = "ss" ] || [ "$type" = "trojan" ]; then
+        return
+     fi
+   fi
 
    
    if [ "$type" = "ss" ] && [ "$obfs" = " " ]; then
@@ -310,7 +333,7 @@ EOF
   fi
    if [ "$skip_cert_verify" = "true" ] && [ "$type" = "ss" ]; then
 cat >> "$SERVER_FILE" <<-EOF
-    skip_cert_verify: true
+    skip-cert-verify: true
 EOF
   fi
 
@@ -333,19 +356,164 @@ cat >> "$SERVER_FILE" <<-EOF
 EOF
   fi
    fi
-   
-   if [ "$type" = "vmess" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port, uuid: $uuid, alterId: $alterId, cipher: $securitys$obfs_vmesss$path$custom$tls$skip_cert_verifys }" >>$SERVER_FILE
-   fi
-   
-   if [ "$type" = "socks5" ] || [ "$type" = "http" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port, username: $auth_name, password: $auth_pass$skip_cert_verifys$tls }" >>$SERVER_FILE
-   fi
-   
-    if [ "$type" = "ssr" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port, cipher: $cipher_ssr, password: "$password"$protol$pro_param$ssr_obfs$obfs_param}" >>$SERVER_FILE
-    fi
 
+if [ "$type" = "trojan" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+  password: "$password"
+EOF
+if [ ! -z "$udp" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  udp: $udp
+EOF
+fi
+if [ ! -z "$sni" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  sni: $sni
+EOF
+fi
+if [ ! -z "$alpn" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  alpn:
+EOF
+config_list_foreach "$section" "alpn" set_alpn
+fi
+if [ "$skip_cert_verify" = "true" ] && [ "$type" = "trojan" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  skip-cert-verify: true
+EOF
+  fi
+fi
+   
+#vmess
+   if [ "$type" = "vmess" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+  uuid: $uuid
+  alterId: $alterId
+  cipher: $securitys
+EOF
+      if [ ! -z "$udp" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  udp: $udp
+EOF
+      fi
+      if [ "$tls" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  tls: $tls
+EOF
+      fi
+      if [ "$skip_cert_verify" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  skip-cert-verify: $skip_cert_verify
+EOF
+      fi
+      if [ "$obfs_vmess" != "none" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  $obfs_vmess
+EOF
+         if [ ! -z "$path" ] && [ "$obfs_vmess" = "network: ws" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  $path
+EOF
+         fi
+         if [ ! -z "$custom" ] && [ "$obfs_vmess" = "network: ws" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  ws-headers:
+    $custom
+EOF
+         fi
+         if [ ! -z "$http_path" ] && [ "$obfs_vmess" = "network: http" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  http-opts:
+    method: "GET"
+    path:
+EOF
+            config_list_foreach "$section" "http_path" set_http_path
+         fi
+         if [ "$keep_alive" = "true" ] && [ "$obfs_vmess" = "network: http" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    headers:
+      Connection:
+        - keep-alive
+EOF
+         fi
+      fi
+   fi
+
+#socks5
+   if [ "$type" = "socks5" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+EOF
+      if [ ! -z "$auth_name" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  username: $auth_name
+EOF
+      fi
+      if [ ! -z "$auth_pass" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  password: $auth_pass
+EOF
+      fi
+      if [ ! -z "$udp" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  udp: $udp
+EOF
+      fi
+      if [ "$skip_cert_verify" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  skip-cert-verify: $skip_cert_verify
+EOF
+      fi
+      if [ "$tls" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  tls: $tls
+EOF
+      fi
+   fi
+
+#http
+   if [ "$type" = "http" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+EOF
+      if [ ! -z "$auth_name" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  username: $auth_name
+EOF
+      fi
+      if [ ! -z "$auth_pass" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  password: $auth_pass
+EOF
+      fi
+      if [ "$skip_cert_verify" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  skip-cert-verify: $skip_cert_verify
+EOF
+      fi
+      if [ "$tls" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  tls: $tls
+EOF
+      fi
+   fi
+
+
+#snell
    if [ "$type" = "snell" ]; then
 cat >> "$SERVER_FILE" <<-EOF
 - name: "$name"
@@ -354,14 +522,30 @@ cat >> "$SERVER_FILE" <<-EOF
   port: $port
   psk: $psk
 EOF
-  if [ "$obfs_snell" != "none" ] && [ ! -z "$host" ]; then
+   if [ "$obfs_snell" != "none" ] && [ ! -z "$host" ]; then
 cat >> "$SERVER_FILE" <<-EOF
   obfs-opts:
     mode: $obfs_snell
-    $host
+    host: $host
 EOF
-  fi
    fi
+   fi
+
+if [ "$type" = "ssr" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+  cipher: $cipher_ssr
+  password: "$password"
+  protocol: "$protocol"
+  protocolparam: "$protocolparam"
+  obfs: "$obfs_ssr"
+  obfsparam: "$obfsparam"
+EOF
+fi
+
 
 }
 
@@ -371,25 +555,16 @@ config_load clash
 config_foreach servers_set "servers"
 fi
 
-if [ -z "${scount}" ] || [ "${scount}" -eq 0 ];then
-cat >> "$SERVER_FILE" <<-EOF
-- name: Shadowsocks
-  type: ss
-  server: 127.0.0.1
-  port: 1080
-  cipher: aes-256-gcm
-  password: "12345"
-EOF
-fi
-
+if [ ! -z "${scount}" ] || [ "${scount}" -ne 0 ];then
 
 sed -i "1i\   " $SERVER_FILE 2>/dev/null 
+
 sed -i "2i\Proxy:" $SERVER_FILE 2>/dev/null 
 
 egrep '^ {0,}-' $SERVER_FILE |grep name: |awk -F 'name: ' '{print $2}' |sed 's/,.*//' >$Proxy_Group 2>&1
 
 sed -i "s/^ \{0,\}/    - /" $Proxy_Group 2>/dev/null 
-
+fi
 
 
 yml_servers_add()
@@ -398,21 +573,10 @@ yml_servers_add()
 	local section="$1"
 	config_get "name" "$section" "name" ""
 	config_list_foreach "$section" "groups" set_groups "$name" "$2"
-	
+	config_get "relay_groups" "$section" "relay_groups" ""
 }
 
-set_groups()
-{
-	if [ -z "$1" ]; then
-		 return
-	fi
 
-	if [ "$1" = "$3" ]; then
-		set_group=1
-		echo "    - \"${2}\"" >>$GROUP_FILE 2>/dev/null 
-	fi
-
-}
 
 set_other_groups()
 {
@@ -469,16 +633,15 @@ yml_groups_set()
    
    echo "- name: $name" >>$GROUP_FILE 2>/dev/null 
    echo "  type: $type" >>$GROUP_FILE 2>/dev/null 
-   
    group_name="$name"
-   #echo "  proxies: $group_name" >>$GROUP_FILE
+   echo "  proxies: " >>$GROUP_FILE
 
-  if [ "$type" == "url-test" ] || [ "$type" == "load-balance" ] || [ "$type" == "fallback" ] ; then
-      echo "  proxies:" >>$GROUP_FILE 2>/dev/null 
-      #cat $Proxy_Group >> $GROUP_FILE 2>/dev/null
-   else
-      echo "  proxies:" >>$GROUP_FILE 2>/dev/null 
-   fi       
+   #if [ "$type" == "url-test" ] || [ "$type" == "load-balance" ] || [ "$type" == "fallback" ] ; then
+   #  echo "  proxies:" >>$GROUP_FILE 2>/dev/null 
+   #   cat $Proxy_Group >> $GROUP_FILE 2>/dev/null
+   #else
+   #  echo "  proxies:" >>$GROUP_FILE 2>/dev/null 
+   #fi       
  
    if [ "$name" != "$old_name" ]; then
       sed -i "s/,${old_name}$/,${name}#d/g" $load 2>/dev/null
@@ -490,14 +653,22 @@ yml_groups_set()
    set_group=0
    set_proxy_provider=0   
    
-   config_list_foreach "$section" "other_group" set_other_groups 
-   config_foreach yml_servers_add "servers" "$name" 
+
+    config_list_foreach "$section" "other_group" set_other_groups #加入其他策略组
+   
+
+   config_foreach yml_servers_add "servers" "$name" "$type" #加入服务器节点
+
    
    if [ "$( grep -c "config provider" $CFG_FILE )" -ne 0 ];then
    
 		echo "  use: $group_name" >>$GROUP_FILE
 	   
-	   config_foreach set_proxy_provider "provider" "$group_name" 
+	   
+	   
+	    if [ "$type" != "relay" ]; then
+			 config_foreach set_proxy_provider "provider" "$group_name" #加入代理集
+	    fi
 
 	   if [ "$set_group" -eq 1 ]; then
 		  sed -i "/^ \{0,\}proxies: ${group_name}/c\  proxies:" $GROUP_FILE
@@ -530,6 +701,7 @@ config_foreach yml_groups_set "groups"
 if [ "$(ls -l $GROUP_FILE|awk '{print $5}')" -ne 0 ]; then
 sed -i "1i\  " $GROUP_FILE 2>/dev/null 
 sed -i "2i\Proxy Group:" $GROUP_FILE 2>/dev/null 
+
 fi
 
 
@@ -579,11 +751,11 @@ if [ -f $SERVER_FILE ];then
 cat $SERVER_FILE >> $TEMP_FILE  2>/dev/null
 fi
 
-cat $GROUP_FILE >> $TEMP_FILE 2>/dev/null
-
 if [ -f $PROVIDER_FILE ];then 
 cat $PROVIDER_FILE >> $TEMP_FILE 2>/dev/null
 fi
+
+cat $GROUP_FILE >> $TEMP_FILE 2>/dev/null
 
 if [ -f $CONFIG_YAML ];then
 	rm -rf $CONFIG_YAML
@@ -593,7 +765,14 @@ cat $TEMP_FILE $CONFIG_YAML_RULE > $CONFIG_YAML 2>/dev/null
 
 sed -i "/Rule:/i\     " $CONFIG_YAML 2>/dev/null
 
-rm -rf $TEMP_FILE $GROUP_FILE $Proxy_Group $CONFIG_FILE $PROVIDER_FILE
+if [ -z $check_name ] && [ "${same_tag}" -eq 1 ];then
+echo "${config_name}.yaml" >>/usr/share/clashbackup/create_list.conf
+elif [ -z $check_name ] && [ "${same_tag}" -eq 0 ];then
+echo "${config_name}.yaml" >>/usr/share/clashbackup/create_list.conf
+fi
+
+rm -rf $TEMP_FILE $GROUP_FILE $Proxy_Group $CONFIG_FILE $PROVIDER_FILE 
+rm -rf /tmp/relay_server.list 2>/dev/null
 
  	if [ $lang == "en" ] || [ $lang == "auto" ];then
 		echo "Completed Creating Custom Config.. " >$REAL_LOG 
@@ -604,19 +783,10 @@ rm -rf $TEMP_FILE $GROUP_FILE $Proxy_Group $CONFIG_FILE $PROVIDER_FILE
 		sleep 2
 		echo "Clash for OpenWRT" >$REAL_LOG
 	fi
-	
-
-
-
-if [ $config_type == "cus" ];then 
-if pidof clash >/dev/null; then
-/etc/init.d/clash restart 2>/dev/null
-fi
-fi
-
 
 rm -rf $SERVER_FILE
 fi
+fi
 
-}
-create_config >/dev/null 2>&1
+
+
