@@ -11,7 +11,7 @@ function index()
 		return
 	end
 
-	entry({"admin", "services", "clash"},alias("admin", "services", "clash", "overview"), _("Clash"), 10).dependent = false
+	entry({"admin", "services", "clash"},alias("admin", "services", "clash", "overview"), _("Clash"), 10).acl_depends = { "luci-app-clash" }
 	entry({"admin", "services", "clash", "overview"},cbi("clash/overview"),_("Overview"), 10).leaf = true
 	entry({"admin", "services", "clash", "client"},cbi("clash/client"),_("Client"), 20).leaf = true
 
