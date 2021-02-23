@@ -11,7 +11,7 @@ function index()
 		return
 	end
 
-	local page = entry({"admin", "services", "clash"},alias("admin", "services", "clash", "overview"), _("Clash"), 5)
+	local page = entry({"admin", "services", "clash"},alias("admin", "services", "clash", "overview"), _("Clash"), 1)
 	page.dependent = true
 	page.acl_depends = {"luci-app-clash"}
 	
@@ -56,6 +56,7 @@ function index()
 	entry({"admin", "services", "clash", "doupdate"}, call("do_update")).leaf=true
 	entry({"admin", "services", "clash", "start"}, call("do_start")).leaf=true
 	entry({"admin", "services", "clash", "stop"}, call("do_stop")).leaf=true
+	entry({"admin", "services", "clash", "reload"}, call("do_reload")).leaf=true
 	entry({"admin", "services", "clash", "geo"}, call("geoip_check")).leaf=true
 	entry({"admin", "services", "clash", "geoipupdate"}, call("geoip_update")).leaf=true
 	entry({"admin", "services", "clash", "check_geoip"}, call("check_geoip_log")).leaf=true	
@@ -121,11 +122,6 @@ local function in_use()
 end
 
 
-local function ping_enable()
-	return luci.sys.exec("uci get clash.config.ping_enable")
-end
-
-
 local function conf_path()
 	if nixio.fs.access(string.sub(luci.sys.exec("uci get clash.config.use_config"), 1, -2)) then
 	return fss.basename(string.sub(luci.sys.exec("uci get clash.config.use_config"), 1, -2))
@@ -178,9 +174,6 @@ local function check_core()
 	return luci.sys.exec("sh /usr/share/clash/check_core_version.sh")
 end
 
-local function check_clashr_core()
-	return luci.sys.exec("sh /usr/share/clash/check_clashr_core_version.sh")
-end
 
 local function check_clashtun_core()
 	return luci.sys.exec("sh /usr/share/clash/check_clashtun_core_version.sh")
@@ -198,9 +191,6 @@ local function new_core_version()
 	return luci.sys.exec("sed -n 1p /usr/share/clash/new_core_version")
 end
 
-local function new_clashr_core_version()
-	return luci.sys.exec("sed -n 1p /usr/share/clash/new_clashr_core_version")
-end
 
 local function new_clashtun_core_version()
 	return luci.sys.exec("sed -n 1p /usr/share/clash/new_clashtun_core_version")
@@ -233,18 +223,6 @@ local function clash_core()
 end
 
 
-local function clashr_core()
-	if nixio.fs.access("/usr/bin/clash") then
-		local core=luci.sys.exec("/usr/bin/clash -v 2>/dev/null |awk -F ' ' '{print $2}'")
-		if core ~= "" then
-			return luci.sys.exec("/usr/bin/clash -v 2>/dev/null |awk -F ' ' '{print $2}'")
-		else
-			return luci.sys.exec("sed -n 1p /usr/share/clash/corer_version")
-		end
-	else
-		return "0"
-	end
-end
 
 
 local function clashtun_core()
@@ -333,11 +311,8 @@ function check_status()
 		check_version = check_version(),
 		check_core = check_core(),
 		current_version = current_version(),
-		check_clashr_core = check_clashr_core(),
 		new_version = new_version(),
-		new_clashr_core_version = new_clashr_core_version(),
 		clash_core = clash_core(),
-		clashr_core = clashr_core(),
 		check_dtun_core = check_dtun_core(),
 		new_dtun_core = new_dtun_core(),
 		clashtun_core = clashtun_core(),
@@ -361,9 +336,7 @@ function action_status()
 		new_core_version = new_core_version(),
 		new_clashtun_core_version =new_clashtun_core_version(),
 		new_version = new_version(),
-		new_clashr_core_version = new_clashr_core_version(),
 		clash_core = clash_core(),
-		clashr_core = clashr_core(),
 		dtun_core = dtun_core(),
 		dash_pass = dash_pass(),
 		clashtun_core = clashtun_core(),
@@ -410,6 +383,12 @@ end
 function do_stop()
 	luci.sys.exec('uci set clash.config.enable="0" && uci commit clash')
 	luci.sys.exec("/etc/init.d/clash stop 2>&1 &")
+end
+
+function do_reload()
+	if luci.sys.call("pidof clash >/dev/null") == 0 then
+		luci.sys.exec("/etc/init.d/clash reload 2>&1 &")
+	end	
 end
 
 function check_update_log()

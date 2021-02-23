@@ -4,7 +4,6 @@ START=99
 STOP=15
 
 CLASH="/etc/clash/clash"
-CLASHR="/usr/bin/clash"
 CLASHT="/etc/clash/clashtun/clash"
 CLASHD="/etc/clash/dtun/clash"
 CLASH_CONFIG="/etc/clash"
@@ -264,7 +263,7 @@ rules(){
 				 ipset add localnetwork "$wan_ip4s" 2>/dev/null
 			  done
 		    fi			
-
+			sh /usr/share/clash/chinaipset.sh >/dev/null 2>&1
 
 		
 		if [ "$(iptables -t nat -nL PREROUTING --line-number |grep "udp dpt:53" |grep "0.0.0.0/0 \{0,\}0.0.0.0/0" |wc -l)" -gt 1 ] && [ "$dnsforwader" -eq "1" ]; then
@@ -305,24 +304,24 @@ rules(){
 			iptables -t nat -F clash
 			iptables -t nat -A clash -m set --match-set localnetwork dst -j RETURN
 			iptables -t nat -A clash -m set --match-set reject_lan src -j RETURN
-			iptables -t nat -A clash -m set ! --match-set proxy_lan src -j RETURN		
+			iptables -t nat -A clash -m set ! --match-set proxy_lan src -j RETURN
+			iptables -t nat -A clash -m set --match-set china dst -j RETURN			
 			iptables -t nat -A clash -p tcp -j REDIRECT --to-ports "${redir_port}"
 			iptables -t nat -I PREROUTING -p tcp -d 8.8.8.8 -j REDIRECT --to-ports "${redir_port}"
 			iptables -t nat -I PREROUTING -p tcp -d 8.8.4.4 -j REDIRECT --to-ports "${redir_port}"			
-            iptables -t nat -A PREROUTING -p tcp -j clash
+           	iptables -t nat -A PREROUTING -p tcp -j clash
+
 				
-				
-				
-			if [ "${enable_udp}" -eq 1 ]; then				
-				ip rule add fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE"
-				ip route add local 0.0.0.0/0 dev lo table "$PROXY_ROUTE_TABLE"			
-				iptables -t mangle -N clash
-				iptables -t mangle -A clash -m set --match-set localnetwork dst -j RETURN
-				iptables -t mangle -A clash -m set --match-set reject_lan src -j RETURN
-				iptables -t mangle -A clash -m set ! --match-set proxy_lan src -j RETURN
-				iptables -t mangle -A clash -p udp -j TPROXY --on-port "${redir_port}" --tproxy-mark "$PROXY_FWMARK"
-				iptables -t mangle -A PREROUTING -p udp -j clash
-			fi
+			ip rule add fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE"
+			ip route add local 0.0.0.0/0 dev lo table "$PROXY_ROUTE_TABLE"			
+			iptables -t mangle -N clash
+			iptables -t mangle -A clash -m set --match-set localnetwork dst -j RETURN
+			iptables -t mangle -A clash -m set --match-set reject_lan src -j RETURN
+			iptables -t mangle -A clash -m set ! --match-set proxy_lan src -j RETURN
+			iptables -t mangle -A clash -m set --match-set china dst -j RETURN
+			iptables -t mangle -A clash -p udp -j TPROXY --on-port "${redir_port}" --tproxy-mark "$PROXY_FWMARK"
+			iptables -t mangle -A PREROUTING -p udp -j clash
+			
 				
 			
 		   if [ "${fake_ip}" == "fake-ip" ];then
@@ -384,12 +383,15 @@ rules(){
             iptables -t mangle -N clash
             iptables -t mangle -F clash
             iptables -t mangle -A clash -m set --match-set localnetwork dst -j RETURN
+			iptables -t mangle -A clash -m set --match-set china dst -j RETURN
 			if [ "${fake_ip}" == "fake-ip" ];then
 			iptables -t mangle -A clash -d 198.18.0.0/16 -j MARK --set-mark "$PROXY_FWMARK"
 			fi
 			
             iptables -t mangle -I OUTPUT -j clash
-            iptables -t mangle -I PREROUTING -m set ! --match-set localnetwork dst -j MARK --set-mark "$PROXY_FWMARK"
+            #iptables -t mangle -I PREROUTING -m set ! --match-set localnetwork dst -j MARK --set-mark "$PROXY_FWMARK"
+			#iptables -t mangle -I PREROUTING -m set ! --match-set china dst -j MARK --set-mark "$PROXY_FWMARK"
+			iptables -t mangle -I PREROUTING -m set ! --match-set localnetwork dst -m set ! --match-set china dst -j MARK --set-mark "$PROXY_FWMARK"
 			iptables -t mangle -I PREROUTING -m set --match-set reject_lan src -j RETURN >/dev/null 2>&1
 			iptables -t mangle -I PREROUTING -m set ! --match-set proxy_lan src -j RETURN >/dev/null 2>&1			
 			iptables -t nat -I PREROUTING -p tcp --dport 53 -j ACCEPT
@@ -457,20 +459,9 @@ if [ "${core}" -eq 1 ] && [ ! -f /etc/clash/clash ]; then
 
 	echo "Clash for OpenWRT" >$REAL_LOG
 	exit 0
-elif  [ "${core}" -eq 2 ] && [ ! -f /usr/bin/clash ]; then
-	if [ "${lang}" == "en" ] || [ $lang == "auto" ];then
-		echo "  $(date "+%Y-%m-%d %H:%M:%S") - clashr core not found in /usr/bin/clash  download and install clashr from update page  " >> /usr/share/clash/clash.txt
-		echo "clashr core not found,  download and install clash from update page" >> $REAL_LOG
-	elif [ "${lang}" == "zh_cn" ];then
-		echo "  $(date "+%Y-%m-%d %H:%M:%S")  - 找不到/usr/bin/clash,请从更新页下载clashr内核" >> /usr/share/clash/clash.txt
-		echo "找不到/usr/bin/clash,请从更新页下载clashr内核" >> $REAL_LOG		
-	fi
-
-	echo "Clash for OpenWRT" >$REAL_LOG
-	exit 0
 elif  [ "${core}" -eq 3 ] && [ ! -f /etc/clash/clashtun/clash ]; then
 	if [ "${lang}" == "en" ] || [ $lang == "auto" ];then
-		echo "  $(date "+%Y-%m-%d %H:%M:%S") - clashr Tun core not found in /etc/clash/clashtun/clash " >> /usr/share/clash/clash.txt
+		echo "  $(date "+%Y-%m-%d %H:%M:%S") - clash Tun core not found in /etc/clash/clashtun/clash " >> /usr/share/clash/clash.txt
 		echo "clash Tun core not found in /etc/clash/clashtun/clash" >> $REAL_LOG
 	elif [ "${lang}" == "zh_cn" ];then
 		echo "  $(date "+%Y-%m-%d %H:%M:%S")  - 找不到/etc/clash/clashtun/clash, clash Tun内核" >> /usr/share/clash/clash.txt
@@ -572,22 +563,6 @@ if  [  -f $CONFIG_YAML ] && [ "$(ls -l $CONFIG_YAML|awk '{print int($5)}')" -ne 
    	yml_change >/dev/null 2>&1
 	
 
-	checktype=$(grep -c "type: ssr" /etc/clash/config.yaml 2>/dev/null)
-	if [ "${checktype}" -gt 0 ] && [ "${core}" -ne 2 ]; then
-	 	
-		if [ "${lang}" == "en" ] || [ $lang == "auto" ];then
-			echo "Clash Core does not Support Config, use clashr core" >$REAL_LOG
-		elif [ "${lang}" == "zh_cn" ];then
-			echo "Clash内核不支持你的配置，改用Clashr内核" >$REAL_LOG
-		fi
-		remove_mark >/dev/null 2>&1
-		sleep 1
-		echo "Clash for OpenWRT" >$REAL_LOG
-		exit 0
-	fi
-		
-	
-	
 	if [ ! -f /etc/clash/Country.mmdb ];then
 		if [ "${lang}" == "en" ] || [ $lang == "auto" ];then
 			echo "Cannot find Country.mmdb" >$REAL_LOG 
@@ -643,15 +618,6 @@ if  [  -f $CONFIG_YAML ] && [ "$(ls -l $CONFIG_YAML|awk '{print int($5)}')" -ne 
 		elif [ "${lang}" == "zh_cn" ];then
 			echo "Clash 计划任务,启动进程守护程序..." >$REAL_LOG
 		fi	
-	elif [ "$(uci get clash.config.core)" -eq 2 ];then
-        	nohup $CLASHR -d "$CLASH_CONFIG" > /usr/share/clash/clash.txt 2>&1 &
-				
-		if [ "${lang}" == "en" ] || [ $lang == "auto" ];then
-			echo "Clashr Core Started Successfully " >$REAL_LOG 
-		elif [ "${lang}" == "zh_cn" ];then
-			echo "Clashr 计划任务,启动进程守护程序..." >$REAL_LOG
-		fi
-		
 	fi
 	ln -s /usr/share/clash/yacd /www/luci-static/yacd 2>/dev/null		
 
@@ -660,7 +626,6 @@ if  [  -f $CONFIG_YAML ] && [ "$(ls -l $CONFIG_YAML|awk '{print int($5)}')" -ne 
 	elif [ "${lang}" == "zh_cn" ];then
 		echo "设置 Clash iptables" >$REAL_LOG
 	fi
-
 
 	rules >/dev/null 2>&1
 	
@@ -772,11 +737,17 @@ remove_mark(){
 			iptables -t mangle -D PREROUTING $prer 2>/dev/null
 		done
 
+		pre1=$(iptables -nvL PREROUTING -t mangle | sed 1,2d | sed -n '/! match-set china dst MARK set 0x162/=' | sort -r)
+		for prer in $pre1; do
+			iptables -t mangle -D PREROUTING $prer 2>/dev/null
+		done
+		
 	   pre_lines=$(iptables -nvL PREROUTING -t nat |sed 1,2d |sed -n '/8\.8\./=' 2>/dev/null |sort -rn)
 	   for pre_line in $pre_lines; do
 		  iptables -t nat -D PREROUTING "$pre_line" >/dev/null 2>&1
 	   done
-   
+
+	   
 		iptables -t nat -D PREROUTING -p tcp --dport 53 -j ACCEPT >/dev/null 2>&1
 		iptables -t nat -D PREROUTING -p udp --dport 53 -j DNAT --to "127.0.0.1:$dns_port"
 
@@ -795,6 +766,8 @@ remove_mark(){
 		ipset -! flush reject_lan >/dev/null 2>&1
 		ipset destroy reject_lan >/dev/null 2>&1
 		ipset destroy proxy_lan >/dev/null 2>&1
+		ipset -! flush china >/dev/null 2>&1
+		ipset destroy china >/dev/null 2>&1
 		
 		proxy_lan=$(iptables -nvL PREROUTING -t mangle | sed 1,2d | sed -n '/! match-set proxy_lan src/=' | sort -r)
 		for natx in $proxy_lan; do
@@ -828,6 +801,16 @@ remove_mark(){
 		
 	    iptables -t nat -D OUTPUT -p tcp -j clash_output >/dev/null 2>&1
 		
+
+		china_lan2=$(iptables -nvL PREROUTING -t nat | sed 1,2d | sed -n '/match-set china/=' | sort -r)
+		for natx in $china_lan2; do
+			iptables -t mangle -D PREROUTING $natx >/dev/null 2>&1
+		done
+
+		china_lan3$(iptables -nvL PREROUTING -t mangle | sed 1,2d | sed -n '/match-set china/=' | sort -r)
+		for natx in $china_lan3; do
+			iptables -t mangle -D PREROUTING $natx >/dev/null 2>&1
+		done
 		
 		ipset destroy localnetwork 2>/dev/null
 		
@@ -965,16 +948,20 @@ restart(){
 		if pidof clash >/dev/null; then
 			stop  >/dev/null 2>&1
 			start >/dev/null 2>&1
+			echo "Clash Successfully Restarted"			
 		else
 		    start >/dev/null 2>&1
+			echo "Clash Successfully Started"
 		fi
 #=========================================================================================================================== 
 }
 
 reload()
 {
-   if pidof clash >/dev/null; then
+if pidof clash >/dev/null; then
       remove_mark 2>/dev/null
-      rules 2>/dev/null
-   fi
+	  yml_dns_change 2>/dev/null
+      rules 2>/dev/null	 
+	  echo "Clash Reload Completed"	
+fi	  
 }
